@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
     // Save the new word
     document.getElementById('saveNewWordButton').addEventListener('click', () => {
-      const newWord = document.getElementById('newWord').value;
+      const newWord = document.getElementById('newWord').value.toLowerCase();
       const newTranslation = document.getElementById('newTranslation').value;
       const newFurigana = document.getElementById('newFurigana').value;
   
@@ -92,8 +92,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const reader = new FileReader();
         reader.onload = function(e) {
           const importedWords = JSON.parse(e.target.result);
+          const lowerCasedWords = {};
+          for (const key in importedWords) {
+            lowerCasedWords[key.toLowerCase()] = importedWords[key];
+          }
           chrome.storage.local.get({ knownWords: {} }, (result) => {
-            const knownWords = { ...result.knownWords, ...importedWords };
+            const knownWords = { ...result.knownWords, ...lowerCasedWords };
             chrome.storage.local.set({ knownWords }, () => {
               renderDictionary(knownWords);
               alert('Dictionary imported!');

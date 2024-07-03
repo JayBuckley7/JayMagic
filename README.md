@@ -26,8 +26,12 @@ To add a word to your dictionary:
 2. Right-click to open the context menu.
 3. Select "Add to dict".
 4. The word will be added to your dictionary and replaced with its Japanese translation on the webpage.
-![](my_video.mov)
-![Context Menu in Action](https://i.gyazo.com/f858431e6db281894be393d6d80a07d1.mp4)
+
+
+
+https://github.com/JayBuckley7/JayMagic/assets/37486350/30256744-c573-4275-9634-3639c04c0d87
+
+
 
 ### Managing Your Dictionary
 

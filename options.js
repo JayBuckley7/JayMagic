@@ -24,27 +24,29 @@ document.addEventListener('DOMContentLoaded', () => {
   
     // Add a new word to the dictionary
     document.getElementById('addWordButton').addEventListener('click', () => {
-      document.getElementById('newWordEntry').style.display = 'block';
+      document.getElementById('newWordEntry').style.display = 'flex';
     });
   
     // Save the new word
     document.getElementById('saveNewWordButton').addEventListener('click', () => {
       const newWord = document.getElementById('newWord').value;
       const newTranslation = document.getElementById('newTranslation').value;
+      const newFurigana = document.getElementById('newFurigana').value;
   
-      if (newWord && newTranslation) {
+      if (newWord && newTranslation && newFurigana) {
         chrome.storage.local.get({ knownWords: {} }, (result) => {
           const knownWords = result.knownWords;
-          knownWords[newWord] = newTranslation;
+          knownWords[newWord] = { translation: newTranslation, furigana: newFurigana };
           chrome.storage.local.set({ knownWords }, () => {
             renderDictionary(knownWords);
             document.getElementById('newWordEntry').style.display = 'none';
             document.getElementById('newWord').value = '';
             document.getElementById('newTranslation').value = '';
+            document.getElementById('newFurigana').value = '';
           });
         });
       } else {
-        alert('Please enter both the word and the translation.');
+        alert('Please enter the word, translation, and furigana.');
       }
     });
   
@@ -53,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('newWordEntry').style.display = 'none';
       document.getElementById('newWord').value = '';
       document.getElementById('newTranslation').value = '';
+      document.getElementById('newFurigana').value = '';
     });
   
     // Export the dictionary
@@ -116,14 +119,19 @@ document.addEventListener('DOMContentLoaded', () => {
   
         const translationInput = document.createElement('input');
         translationInput.type = 'text';
-        translationInput.value = knownWords[word];
+        translationInput.value = knownWords[word].translation;
+  
+        const furiganaInput = document.createElement('input');
+        furiganaInput.type = 'text';
+        furiganaInput.value = knownWords[word].furigana;
   
         const saveButton = document.createElement('button');
         saveButton.textContent = 'Save';
         saveButton.addEventListener('click', () => {
           const updatedWord = wordInput.value;
           const updatedTranslation = translationInput.value;
-          knownWords[updatedWord] = updatedTranslation;
+          const updatedFurigana = furiganaInput.value;
+          knownWords[updatedWord] = { translation: updatedTranslation, furigana: updatedFurigana };
           chrome.storage.local.set({ knownWords }, () => {
             alert('Word updated!');
           });
@@ -141,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
         wordEntry.appendChild(wordInput);
         wordEntry.appendChild(translationInput);
+        wordEntry.appendChild(furiganaInput);
         wordEntry.appendChild(saveButton);
         wordEntry.appendChild(deleteButton);
   

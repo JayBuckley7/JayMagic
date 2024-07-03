@@ -54,20 +54,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true; // Keep the message channel open for sendResponse
   }
 });
-
 function addWordToDictionary(word) {
+  // Convert word to lowercase
+  const lowercaseWord = word.toLowerCase();
+
   chrome.storage.local.get({ knownWords: {} }, (result) => {
     const knownWords = result.knownWords;
-    if (!knownWords[word]) {
-      translateWord(word, (translation) => {
-        knownWords[word] = translation;
+    if (!knownWords[lowercaseWord]) {
+      translateWord(lowercaseWord, (translation, furigana) => {
+        knownWords[lowercaseWord] = { translation, furigana };
         chrome.storage.local.set({ knownWords }, () => {
-          console.log(`JayMagic: Word "${word}" added to the dictionary with translation "${translation}".`);
+          console.log(`JayMagic: Word "${lowercaseWord}" added to the dictionary with translation "${translation}" and furigana "${furigana}".`);
         });
       });
     }
   });
 }
+
 
 function translateWord(word, callback) {
   chrome.storage.local.get({ apiKey: DEFAULT_OPENAI_API_KEY }, (result) => {
@@ -81,17 +84,17 @@ function translateWord(word, callback) {
       messages: [
         {
           role: "system",
-          content: "You are a word replacer. Always provide the most common form in either Kanji or Hiragana (or katakana). Only provide one word do not provide both kana and kanji. do not provide the furigana if you provide the kanji. If the word is something too simple, like a or to or it for example, you can put a particle."
+          content: "You are a word replacer. Always provide the most common form in either Kanji or Hiragana (or katakana). Only provide one word, do not provide both kana and kanji. Do not provide the furigana if you provide the kanji. If the word is something too simple, like 'a', 'to', or 'it', provide a particle."
         },
         {
           role: "user",
-          content: `For the following English word: ${word}. Respond back with Only the most common form of this word in Japanese Hiragana or Kanji (or katakana), or similar particle. Do not provide the furigana if you provide the kanji.`
+          content: `Translate the following English word to Japanese, providing the most common form first, followed by a comma and the romaji, or a comma and "" if not applicable: ${word}.`
         }
       ],
       max_tokens: 60,
       temperature: 0.3
     };
-    
+
     // Log the message request to the console for verification
     console.log('JayMagic: Message request to OpenAI:', messageRequest);
 
@@ -107,8 +110,9 @@ function translateWord(word, callback) {
     .then(data => {
       console.log('JayMagic: Response from OpenAI:', data);  // Log the entire response
       if (data.choices && data.choices.length > 0) {
-        const translation = data.choices[0].message.content.trim();
-        callback(translation);
+        const content = data.choices[0].message.content.trim();
+        const [translation, furigana] = content.split(',');
+        callback(translation.trim(), furigana.trim());
       } else {
         console.error('JayMagic: No translation received from OpenAI.');
       }
@@ -116,5 +120,3 @@ function translateWord(word, callback) {
     .catch(error => console.error('JayMagic: Error translating word:', error));
   });
 }
-
-

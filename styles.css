@@ -1,6 +1,8 @@
 .jaymagic-tooltip {
   position: relative;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit; /* Keeps the link color same as the surrounding text */
 }
 
 .jaymagic-tooltip:hover::after {

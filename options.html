@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>JayMagic Options</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .container { max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+    .word-entry { margin-bottom: 10px; }
+    .word-entry input { margin-right: 10px; }
+    .word-entry button { margin-left: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>JayMagic Options</h2>
+
+    <div>
+      <label for="apiKey">OpenAI API Key:</label>
+      <input type="text" id="apiKey" style="width: 100%;" />
+      <button id="saveApiKeyButton">Save API Key</button>
+    </div>
+
+    <div>
+      <label for="model">Model:</label>
+      <input type="text" id="model" value="gpt-3.5-turbo" style="width: 100%;" />
+      <button id="saveModelButton">Save Model</button>
+    </div>
+
+    <h3>Dictionary</h3>
+    <div id="dictionary"></div>
+    <button id="addWordButton">Add Word</button>
+
+    <div id="newWordEntry" class="word-entry" style="display: none;">
+      <input type="text" id="newWord" placeholder="English word" />
+      <input type="text" id="newTranslation" placeholder="Japanese translation" />
+      <button id="saveNewWordButton">Save</button>
+      <button id="cancelNewWordButton">Cancel</button>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

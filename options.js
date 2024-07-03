@@ -55,6 +55,52 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('newTranslation').value = '';
     });
   
+    // Export the dictionary
+    document.getElementById('exportDictionaryButton').addEventListener('click', () => {
+      chrome.storage.local.get({ knownWords: {} }, (result) => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(result.knownWords));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "dictionary.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+      });
+    });
+  
+    // Clear the dictionary
+    document.getElementById('clearDictionaryButton').addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear the dictionary?')) {
+        chrome.storage.local.set({ knownWords: {} }, () => {
+          renderDictionary({});
+          alert('Dictionary cleared!');
+        });
+      }
+    });
+  
+    // Import the dictionary
+    document.getElementById('importDictionaryButton').addEventListener('click', () => {
+      document.getElementById('importDictionaryInput').click();
+    });
+  
+    document.getElementById('importDictionaryInput').addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const importedWords = JSON.parse(e.target.result);
+          chrome.storage.local.get({ knownWords: {} }, (result) => {
+            const knownWords = { ...result.knownWords, ...importedWords };
+            chrome.storage.local.set({ knownWords }, () => {
+              renderDictionary(knownWords);
+              alert('Dictionary imported!');
+            });
+          });
+        };
+        reader.readAsText(file);
+      }
+    });
+  
     // Render the dictionary
     function renderDictionary(knownWords) {
       const dictionaryDiv = document.getElementById('dictionary');

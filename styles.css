@@ -1,13 +1,17 @@
-/* styles.css */
-.jaymagic-banner {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    background-color: #FFD700;
-    color: #000;
-    text-align: center;
-    font-size: 24px;
-    padding: 10px 0;
-    z-index: 10000;
-  }
-  
+.jaymagic-tooltip {
+  position: relative;
+  cursor: pointer;
+}
+
+.jaymagic-tooltip:hover::after {
+  content: attr(title);
+  position: absolute;
+  background: #333;
+  color: #fff;
+  padding: 5px;
+  border-radius: 5px;
+  top: -5px;
+  left: 105%;
+  white-space: nowrap;
+  z-index: 1000;
+}

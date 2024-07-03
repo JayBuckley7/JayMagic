@@ -28,10 +28,12 @@
     let content = textNode.nodeValue;
     for (const word in knownWords) {
       const regex = new RegExp(`\\b${word}\\b`, 'gi'); // Word boundary to match whole words only
-      content = content.replace(regex, knownWords[word]);
+      content = content.replace(regex, (match) => `<span class="jaymagic-tooltip" title=":)">${knownWords[word]}</span>`);
     }
     if (content !== textNode.nodeValue) {
-      textNode.nodeValue = content;
+      const span = document.createElement('span');
+      span.innerHTML = content;
+      textNode.parentNode.replaceChild(span, textNode);
     }
   }
 

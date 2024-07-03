@@ -1,6 +1,6 @@
-# JayMagic Chrome Extension
+# LangMagick Chrome Extension
 
-JayMagic is a Chrome extension designed to replace specific words on a webpage with their Japanese equivalents, complete with tooltips for additional context. This extension is particularly useful for language learners or anyone looking to enhance their Japanese vocabulary.
+LangMagick is a Chrome extension designed to replace specific words on a webpage with their Japanese equivalents, complete with tooltips for additional context. This extension is particularly useful for language learners or anyone looking to enhance their Japanese vocabulary.
 
 ## Features
 

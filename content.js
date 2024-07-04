@@ -3,10 +3,17 @@
   let blacklistedSites = [];
 
   function replaceKnownWords(knownWords) {
-    walk(document.body, knownWords);
+    // Sort words by length in descending order
+    const sortedWords = Object.keys(knownWords).sort((a, b) => b.length - a.length);
+
+    // Create a regex pattern from the sorted words
+    const wordsPattern = sortedWords.join('|');
+    const regex = new RegExp(`\\b(${wordsPattern})\\b`, 'gi');
+
+    walk(document.body, knownWords, regex);
   }
 
-  function walk(node, knownWords) {
+  function walk(node, knownWords, regex) {
     let child, next;
 
     switch (node.nodeType) {
@@ -16,45 +23,44 @@
         child = node.firstChild;
         while (child) {
           next = child.nextSibling;
-          walk(child, knownWords);
+          walk(child, knownWords, regex);
           child = next;
         }
         break;
       case 3: // Text node
-        handleText(node, knownWords);
+        handleText(node, knownWords, regex);
         break;
     }
   }
 
-  function handleText(textNode, knownWords) {
+  function handleText(textNode, knownWords, regex) {
     let content = textNode.nodeValue;
 
     const span = document.createElement('span');
     let lastIndex = 0;
     let replaced = false;
 
-    const words = Object.keys(knownWords).join('|');
-    const regex = new RegExp(`\\b(${words})\\b`, 'gi');
-
     content.replace(regex, (match, p1, offset) => {
-      p1 = p1.toLowerCase();
-      span.appendChild(document.createTextNode(content.slice(lastIndex, offset)));
+      const key = p1.toLowerCase();
+      if (knownWords[key]) {
+        span.appendChild(document.createTextNode(content.slice(lastIndex, offset)));
 
-      const translation = knownWords[p1].translation;
-      const furigana = knownWords[p1].furigana;
-      const tooltip = furigana ? `${furigana} :)` : `:)`;
+        const translation = knownWords[key].translation;
+        const furigana = knownWords[key].furigana;
+        const tooltip = furigana ? `${furigana} :)` : `:)`;
 
-      const anchor = document.createElement('a');
-      anchor.href = `https://jisho.org/search/${translation}`;
-      anchor.target = '_blank';
-      anchor.className = 'jaymagic-tooltip';
-      anchor.title = tooltip;
-      anchor.textContent = translation;
+        const anchor = document.createElement('a');
+        anchor.href = `https://jisho.org/search/${translation}`;
+        anchor.target = '_blank';
+        anchor.className = 'jaymagic-tooltip';
+        anchor.title = tooltip;
+        anchor.textContent = translation;
 
-      span.appendChild(anchor);
+        span.appendChild(anchor);
 
-      lastIndex = offset + match.length;
-      replaced = true;
+        lastIndex = offset + match.length;
+        replaced = true;
+      }
     });
 
     span.appendChild(document.createTextNode(content.slice(lastIndex)));

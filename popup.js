@@ -11,11 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const path = url.pathname;
       const fullEntry = `${domain}${path}`;
 
-      chrome.storage.sync.get({ blacklistedSites: [] }, (result) => {
+      chrome.storage.local.get({ blacklistedSites: [] }, (result) => {
         const blacklistedSites = result.blacklistedSites;
         if (!blacklistedSites.includes(fullEntry)) {
           blacklistedSites.push(fullEntry);
-          chrome.storage.sync.set({ blacklistedSites }, () => {
+          chrome.storage.local.set({ blacklistedSites }, () => {
             console.log(`JayMagic: Path "${fullEntry}" added to the blacklist.`);
             alert(`Path "${fullEntry}" has been disabled.`);
           });
@@ -34,12 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const path = url.pathname;
       const fullEntry = `${domain}${path}`;
 
-      chrome.storage.sync.get({ blacklistedSites: [] }, (result) => {
+      chrome.storage.local.get({ blacklistedSites: [] }, (result) => {
         const blacklistedSites = result.blacklistedSites;
         const index = blacklistedSites.indexOf(fullEntry);
         if (index > -1) {
           blacklistedSites.splice(index, 1);
-          chrome.storage.sync.set({ blacklistedSites }, () => {
+          chrome.storage.local.set({ blacklistedSites }, () => {
             console.log(`JayMagic: Path "${fullEntry}" removed from the blacklist.`);
             alert(`Path "${fullEntry}" has been enabled.`);
           });

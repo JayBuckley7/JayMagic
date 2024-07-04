@@ -71,7 +71,7 @@
   }
 
   function init() {
-    chrome.storage.local.get(['knownWords', 'blacklistedSites'], function(result) {
+    chrome.storage.sync.get(['knownWords', 'blacklistedSites'], function(result) {
       knownWords = result.knownWords || {};
       blacklistedSites = result.blacklistedSites || [];
 

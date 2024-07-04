@@ -8,9 +8,9 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log("JayMagic: Extension installed, creating context menu...");
 
   // Set the default API key in local storage if not already set.
-  chrome.storage.sync.get({ apiKey: DEFAULT_OPENAI_API_KEY }, (result) => {
+  chrome.storage.local.get({ apiKey: DEFAULT_OPENAI_API_KEY }, (result) => {
     if (!result.apiKey || result.apiKey === DEFAULT_OPENAI_API_KEY) {
-      chrome.storage.sync.set({ apiKey: DEFAULT_OPENAI_API_KEY }, () => {
+      chrome.storage.local.set({ apiKey: DEFAULT_OPENAI_API_KEY }, () => {
         console.log("JayMagic: API key is set to default. Please update the API key in options.");
       });
     } else {
@@ -30,14 +30,14 @@ chrome.runtime.onInstalled.addListener(() => {
     }
   });
 
-  chrome.storage.sync.get({ knownWords: {}, blacklistedSites: [] }, (result) => {
+  chrome.storage.local.get({ knownWords: {}, blacklistedSites: [] }, (result) => {
     let blacklistedSites = result.blacklistedSites;
     DEFAULT_BLACKLISTED_SITES.forEach(site => {
       if (!blacklistedSites.includes(site)) {
         blacklistedSites.push(site);
       }
     });
-    chrome.storage.sync.set({ blacklistedSites }, () => {
+    chrome.storage.local.set({ blacklistedSites }, () => {
       console.log("JayMagic: Initialized blacklistedSites storage with default sites.");
     });
   });
@@ -51,7 +51,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getWords") {
-    chrome.storage.sync.get({ knownWords: {} }, (result) => {
+    chrome.storage.local.get({ knownWords: {} }, (result) => {
       sendResponse({ words: result.knownWords });
     });
     return true; // Keep the message channel open for sendResponse
@@ -66,12 +66,12 @@ function addWordToDictionary(word) {
   // Convert word to lowercase
   const lowercaseWord = word.toLowerCase();
 
-  chrome.storage.sync.get({ knownWords: {} }, (result) => {
+  chrome.storage.local.get({ knownWords: {} }, (result) => {
     const knownWords = result.knownWords;
     if (!knownWords[lowercaseWord]) {
       translateWord(lowercaseWord, (translation, furigana) => {
         knownWords[lowercaseWord] = { translation, furigana };
-        chrome.storage.sync.set({ knownWords }, () => {
+        chrome.storage.local.set({ knownWords }, () => {
           console.log(`JayMagic: Word "${lowercaseWord}" added to the dictionary with translation "${translation}" and furigana "${furigana}".`);
         });
       });
@@ -80,7 +80,7 @@ function addWordToDictionary(word) {
 }
 
 function translateWord(word, callback) {
-  chrome.storage.sync.get({ apiKey: DEFAULT_OPENAI_API_KEY }, (result) => {
+  chrome.storage.local.get({ apiKey: DEFAULT_OPENAI_API_KEY }, (result) => {
     const apiKey = result.apiKey;
     if (apiKey === DEFAULT_OPENAI_API_KEY) {
       console.error("JayMagic: Using default API key. Please update the API key in options.");

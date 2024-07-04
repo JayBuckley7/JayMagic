@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Load the API key, model, known words, and blacklisted sites from storage
-  chrome.storage.sync.get({ apiKey: '', model: 'gpt-3.5-turbo', knownWords: {}, blacklistedSites: [] }, (result) => {
+  chrome.storage.local.get({ apiKey: '', model: 'gpt-3.5-turbo', knownWords: {}, blacklistedSites: [] }, (result) => {
     document.getElementById('apiKey').value = result.apiKey;
     document.getElementById('model').value = result.model;
     renderDictionary(result.knownWords);
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Save the API key to storage
   document.getElementById('saveApiKeyButton').addEventListener('click', () => {
     const apiKey = document.getElementById('apiKey').value;
-    chrome.storage.sync.set({ apiKey }, () => {
+    chrome.storage.local.set({ apiKey }, () => {
       alert('API Key saved!');
     });
   });
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Save the model to storage
   document.getElementById('saveModelButton').addEventListener('click', () => {
     const model = document.getElementById('model').value;
-    chrome.storage.sync.set({ model }, () => {
+    chrome.storage.local.set({ model }, () => {
       alert('Model saved!');
     });
   });
@@ -41,10 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const newFurigana = document.getElementById('newFurigana').value;
 
     if (newWord && newTranslation && newFurigana) {
-      chrome.storage.sync.get({ knownWords: {} }, (result) => {
+      chrome.storage.local.get({ knownWords: {} }, (result) => {
         const knownWords = result.knownWords;
         knownWords[newWord] = { translation: newTranslation, furigana: newFurigana };
-        chrome.storage.sync.set({ knownWords }, () => {
+        chrome.storage.local.set({ knownWords }, () => {
           renderDictionary(knownWords);
           document.getElementById('newWordEntry').style.display = 'none';
           document.getElementById('newWord').value = '';
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Export the dictionary
   document.getElementById('exportDictionaryButton').addEventListener('click', () => {
-    chrome.storage.sync.get({ knownWords: {} }, (result) => {
+    chrome.storage.local.get({ knownWords: {} }, (result) => {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(result.knownWords));
       const downloadAnchorNode = document.createElement('a');
       downloadAnchorNode.setAttribute("href", dataStr);
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Clear the dictionary
   document.getElementById('clearDictionaryButton').addEventListener('click', () => {
     if (confirm('Are you sure you want to clear the dictionary?')) {
-      chrome.storage.sync.set({ knownWords: {} }, () => {
+      chrome.storage.local.set({ knownWords: {} }, () => {
         renderDictionary({});
         alert('Dictionary cleared!');
       });
@@ -103,9 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const key in importedWords) {
           lowerCasedWords[key.toLowerCase()] = importedWords[key];
         }
-        chrome.storage.sync.get({ knownWords: {} }, (result) => {
+        chrome.storage.local.get({ knownWords: {} }, (result) => {
           const knownWords = { ...result.knownWords, ...lowerCasedWords };
-          chrome.storage.sync.set({ knownWords }, () => {
+          chrome.storage.local.set({ knownWords }, () => {
             renderDictionary(knownWords);
             alert('Dictionary imported!');
           });
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const updatedTranslation = translationInput.value;
         const updatedFurigana = furiganaInput.value;
         knownWords[updatedWord] = { translation: updatedTranslation, furigana: updatedFurigana };
-        chrome.storage.sync.set({ knownWords }, () => {
+        chrome.storage.local.set({ knownWords }, () => {
           alert('Word updated!');
         });
       });
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
       deleteButton.textContent = 'Delete';
       deleteButton.addEventListener('click', () => {
         delete knownWords[word];
-        chrome.storage.sync.set({ knownWords }, () => {
+        chrome.storage.local.set({ knownWords }, () => {
           renderDictionary(knownWords);
           alert('Word deleted!');
         });
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const index = blacklistedSites.indexOf(site);
         if (index > -1) {
           blacklistedSites[index] = editSiteInput.value;
-          chrome.storage.sync.set({ blacklistedSites }, () => {
+          chrome.storage.local.set({ blacklistedSites }, () => {
             renderBlacklistedSites(blacklistedSites);
             alert('Site updated in blacklist!');
           });
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (index > -1) {
           blacklistedSites.splice(index, 1);
         }
-        chrome.storage.sync.set({ blacklistedSites }, () => {
+        chrome.storage.local.set({ blacklistedSites }, () => {
           renderBlacklistedSites(blacklistedSites);
           alert('Site removed from blacklist!');
         });

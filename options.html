@@ -1,51 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>JayMagic Options</title>
-  <style>
-    body { font-family: Arial, sans-serif; }
-    .container { max-width: 800px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
-    .word-entry, .site-entry { margin-bottom: 10px; display: flex; align-items: center; }
-    .word-entry input, .site-entry input { margin-right: 10px; }
-    .word-entry button, .site-entry button { margin-left: 10px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JayMagic Options</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <h2>JayMagic Options</h2>
+    <div class="container">
+        <h2>JayMagic Options</h2>
 
-    <div>
-      <label for="apiKey">OpenAI API Key:</label>
-      <input type="text" id="apiKey" style="width: 100%;" />
-      <button id="saveApiKeyButton">Save API Key</button>
+        <div class="entry">
+            <label for="apiKey">OpenAI API Key:</label>
+            <input type="text" id="apiKey" style="width: 100%;" />
+            <button id="saveApiKeyButton">Save API Key</button>
+        </div>
+
+        <button type="button" class="collapsible">Model</button>
+        <div class="content">
+            <div class="entry">
+                <label for="model">Model:</label>
+                <input type="text" id="model" value="gpt-3.5-turbo" style="width: 100%;" />
+            </div>
+            <div class="entry">
+                <label for="modelSystemPrompt">System Prompt:</label>
+                <textarea id="modelSystemPrompt" style="width: 100%;"></textarea>
+            </div>
+            <div class="entry">
+                <label for="modelUserPrompt">User Prompt:</label>
+                <textarea id="modelUserPrompt" style="width: 100%;"></textarea>
+            </div>
+            <button id="saveModelButton">Save Model Settings</button>
+        </div>
+
+        <button type="button" class="collapsible">Retry Model</button>
+        <div class="content">
+            <div class="entry">
+                <label for="retryModel">Retry Model:</label>
+                <input type="text" id="retryModel" value="gpt-4" style="width: 100%;" />
+            </div>
+            <div class="entry">
+                <label for="retryModelSystemPrompt">Retry System Prompt:</label>
+                <textarea id="retryModelSystemPrompt" style="width: 100%;"></textarea>
+            </div>
+            <div class="entry">
+                <label for="retryModelUserPrompt">Retry User Prompt:</label>
+                <textarea id="retryModelUserPrompt" style="width: 100%;"></textarea>
+            </div>
+            <button id="saveRetryModelButton">Save Retry Model Settings</button>
+        </div>
+
+        <button type="button" class="collapsible">Dictionary</button>
+        <div class="content">
+            <div id="dictionary"></div>
+            <button id="addWordButton">Add Word</button>
+            <button id="exportDictionaryButton">Export Dictionary</button>
+            <button id="clearDictionaryButton">Clear Dictionary</button>
+            <input type="file" id="importDictionaryInput" style="display: none;" />
+            <button id="importDictionaryButton">Import Dictionary</button>
+
+            <div id="newWordEntry" class="word-entry" style="display: none;">
+                <input type="text" id="newWord" placeholder="English word" />
+                <input type="text" id="newTranslation" placeholder="Japanese translation" />
+                <input type="text" id="newFurigana" placeholder="Furigana" />
+                <button id="saveNewWordButton">Save</button>
+                <button id="cancelNewWordButton">Cancel</button>
+            </div>
+        </div>
+
+        <h3>Blacklisted Sites</h3>
+        <div id="blacklistedSites"></div>
     </div>
 
-    <div>
-      <label for="model">Model:</label>
-      <input type="text" id="model" value="gpt-3.5-turbo" style="width: 100%;" />
-      <button id="saveModelButton">Save Model</button>
-    </div>
-
-    <h3>Dictionary</h3>
-    <div id="dictionary"></div>
-    <button id="addWordButton">Add Word</button>
-    <button id="exportDictionaryButton">Export Dictionary</button>
-    <button id="clearDictionaryButton">Clear Dictionary</button>
-    <input type="file" id="importDictionaryInput" style="display: none;" />
-    <button id="importDictionaryButton">Import Dictionary</button>
-
-    <div id="newWordEntry" class="word-entry" style="display: none;">
-      <input type="text" id="newWord" placeholder="English word" />
-      <input type="text" id="newTranslation" placeholder="Japanese translation" />
-      <input type="text" id="newFurigana" placeholder="Furigana" />
-      <button id="saveNewWordButton">Save</button>
-      <button id="cancelNewWordButton">Cancel</button>
-    </div>
-
-    <h3>Blacklisted Sites</h3>
-    <div id="blacklistedSites"></div>
-  </div>
-
-  <script src="options.js"></script>
+    <script src="options.js"></script>
 </body>
 </html>

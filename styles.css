@@ -17,3 +17,70 @@
   white-space: nowrap;
   z-index: 1000;
 }
+
+body { 
+  font-family: Arial, sans-serif; 
+}
+.container { 
+  max-width: 800px; 
+  margin: 50px auto; 
+  padding: 20px; 
+  border: 1px solid #ccc; 
+  border-radius: 10px; 
+}
+.entry { 
+  margin-bottom: 20px; 
+  display: flex; 
+  align-items: center; 
+}
+.entry input { 
+  flex: 1; 
+  margin-right: 10px; 
+}
+.entry button { 
+  margin-left: 10px; 
+}
+.collapsible { 
+  background-color: #f9f9f9; 
+  cursor: pointer; 
+  padding: 10px; 
+  width: 100%; 
+  border: none; 
+  text-align: left; 
+  outline: none; 
+  font-size: 16px; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  border-radius: 5px;
+  margin-top: 10px;
+}
+.collapsible::after { 
+  content: '▼'; 
+  font-size: 12px; 
+}
+.collapsible.active::after { 
+  content: '▲'; 
+  font-size: 12px; 
+}
+.collapsible.active, .collapsible:hover { 
+  background-color: #ddd; 
+}
+.content { 
+  padding: 10px 18px; 
+  display: none; 
+  overflow: hidden; 
+  background-color: #f9f9f9; 
+  border-radius: 0 0 5px 5px;
+}
+.word-entry, .site-entry { 
+  margin-bottom: 10px; 
+  display: flex; 
+  align-items: center; 
+}
+.word-entry input, .site-entry input { 
+  margin-right: 10px; 
+}
+.word-entry button, .site-entry button { 
+  margin-left: 10px; 
+}

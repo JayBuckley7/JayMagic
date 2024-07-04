@@ -29,5 +29,11 @@
   ],
   "icons": {
     "48": "icon.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["sparkle.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

@@ -5,9 +5,9 @@
   <style>
     body { font-family: Arial, sans-serif; }
     .container { max-width: 800px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
-    .word-entry { margin-bottom: 10px; display: flex; }
-    .word-entry input { margin-right: 10px; }
-    .word-entry button { margin-left: 10px; }
+    .word-entry, .site-entry { margin-bottom: 10px; display: flex; align-items: center; }
+    .word-entry input, .site-entry input { margin-right: 10px; }
+    .word-entry button, .site-entry button { margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -41,6 +41,9 @@
       <button id="saveNewWordButton">Save</button>
       <button id="cancelNewWordButton">Cancel</button>
     </div>
+
+    <h3>Blacklisted Sites</h3>
+    <div id="blacklistedSites"></div>
   </div>
 
   <script src="options.js"></script>

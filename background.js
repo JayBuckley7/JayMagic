@@ -1,4 +1,8 @@
 const DEFAULT_OPENAI_API_KEY = 'YOUR_DEFAULT_API_KEY'; // Replace with a default placeholder
+const DEFAULT_BLACKLISTED_SITES = [
+  'jisho.org/search/',
+  'www.google.com/search'
+];
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log("JayMagic: Extension installed, creating context menu...");
@@ -26,13 +30,16 @@ chrome.runtime.onInstalled.addListener(() => {
     }
   });
 
-  chrome.storage.local.get({ knownWords: {} }, (result) => {
-    console.log("JayMagic: Initial knownWords:", result.knownWords);
-    if (!result.knownWords) {
-      chrome.storage.local.set({ knownWords: {} }, () => {
-        console.log("JayMagic: Initialized knownWords storage.");
-      });
-    }
+  chrome.storage.local.get({ knownWords: {}, blacklistedSites: [] }, (result) => {
+    let blacklistedSites = result.blacklistedSites;
+    DEFAULT_BLACKLISTED_SITES.forEach(site => {
+      if (!blacklistedSites.includes(site)) {
+        blacklistedSites.push(site);
+      }
+    });
+    chrome.storage.local.set({ blacklistedSites }, () => {
+      console.log("JayMagic: Initialized blacklistedSites storage with default sites.");
+    });
   });
 });
 
@@ -54,6 +61,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true; // Keep the message channel open for sendResponse
   }
 });
+
 function addWordToDictionary(word) {
   // Convert word to lowercase
   const lowercaseWord = word.toLowerCase();
@@ -70,7 +78,6 @@ function addWordToDictionary(word) {
     }
   });
 }
-
 
 function translateWord(word, callback) {
   chrome.storage.local.get({ apiKey: DEFAULT_OPENAI_API_KEY }, (result) => {

@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dictionaryDiv.innerHTML = '';
         for (const word in knownWords) {
             const wordEntry = document.createElement('div');
-            wordEntry.className = 'word-entry';
+            wordEntry.className = 'jmagic-word-entry';
   
             const wordInput = document.createElement('input');
             wordInput.type = 'text';
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
         blacklistedSites.forEach(site => {
             const siteEntry = document.createElement('div');
-            siteEntry.className = 'site-entry';
+            siteEntry.className = 'jmagic-site-entry';
   
             const siteInput = document.createElement('input');
             siteInput.type = 'text';
@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   
     // Handle collapsible sections
-    document.querySelectorAll('.collapsible').forEach(button => {
+    document.querySelectorAll('.jmagic-collapsible').forEach(button => {
         button.addEventListener('click', function() {
             this.classList.toggle('active');
             const content = this.nextElementSibling;

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="jmagic-body">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,51 +7,51 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
+    <div class="jmagic-container">
         <h2>JayMagic Options</h2>
 
-        <div class="entry">
+        <div class="jmagic-entry">
             <label for="apiKey">OpenAI API Key:</label>
             <input type="text" id="apiKey" style="width: 100%;" />
             <button id="saveApiKeyButton">Save API Key</button>
         </div>
 
-        <button type="button" class="collapsible">Model</button>
-        <div class="content">
-            <div class="entry">
+        <button type="button" class="jmagic-collapsible">Model</button>
+        <div class="jmagic-content">
+            <div class="jmagic-entry">
                 <label for="model">Model:</label>
                 <input type="text" id="model" value="gpt-3.5-turbo" style="width: 100%;" />
             </div>
-            <div class="entry">
+            <div class="jmagic-entry">
                 <label for="modelSystemPrompt">System Prompt:</label>
                 <textarea id="modelSystemPrompt" style="width: 100%;"></textarea>
             </div>
-            <div class="entry">
+            <div class="jmagic-entry">
                 <label for="modelUserPrompt">User Prompt:</label>
                 <textarea id="modelUserPrompt" style="width: 100%;"></textarea>
             </div>
             <button id="saveModelButton">Save Model Settings</button>
         </div>
 
-        <button type="button" class="collapsible">Retry Model</button>
-        <div class="content">
-            <div class="entry">
+        <button type="button" class="jmagic-collapsible">Retry Model</button>
+        <div class="jmagic-content">
+            <div class="jmagic-entry">
                 <label for="retryModel">Retry Model:</label>
                 <input type="text" id="retryModel" value="gpt-4" style="width: 100%;" />
             </div>
-            <div class="entry">
+            <div class="jmagic-entry">
                 <label for="retryModelSystemPrompt">Retry System Prompt:</label>
                 <textarea id="retryModelSystemPrompt" style="width: 100%;"></textarea>
             </div>
-            <div class="entry">
+            <div class="jmagic-entry">
                 <label for="retryModelUserPrompt">Retry User Prompt:</label>
                 <textarea id="retryModelUserPrompt" style="width: 100%;"></textarea>
             </div>
             <button id="saveRetryModelButton">Save Retry Model Settings</button>
         </div>
 
-        <button type="button" class="collapsible">Dictionary</button>
-        <div class="content">
+        <button type="button" class="jmagic-collapsible">Dictionary</button>
+        <div class="jmagic-content">
             <div id="dictionary"></div>
             <button id="addWordButton">Add Word</button>
             <button id="exportDictionaryButton">Export Dictionary</button>
@@ -59,7 +59,7 @@
             <input type="file" id="importDictionaryInput" style="display: none;" />
             <button id="importDictionaryButton">Import Dictionary</button>
 
-            <div id="newWordEntry" class="word-entry" style="display: none;">
+            <div id="newWordEntry" class="jmagic-word-entry" style="display: none;">
                 <input type="text" id="newWord" placeholder="English word" />
                 <input type="text" id="newTranslation" placeholder="Japanese translation" />
                 <input type="text" id="newFurigana" placeholder="Furigana" />

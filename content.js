@@ -1,143 +1,146 @@
-(function() {
-  let knownWords = {};
-  let blacklistedSites = [];
+// Function to replace known words on the page
+function replaceKnownWords(knownWords) {
+  walk(document.body, knownWords);
+}
 
-  function replaceKnownWords(knownWords) {
-    // Sort words by length in descending order
-    const sortedWords = Object.keys(knownWords).sort((a, b) => b.length - a.length);
+function walk(node, knownWords) {
+  let child, next;
 
-    // Create a regex pattern from the sorted words
-    const wordsPattern = sortedWords.join('|');
-    const regex = new RegExp(`\\b(${wordsPattern})\\b`, 'gi');
-
-    walk(document.body, knownWords, regex);
+  switch (node.nodeType) {
+    case 1: // Element
+    case 9: // Document
+    case 11: // Document fragment
+      child = node.firstChild;
+      while (child) {
+        next = child.nextSibling;
+        walk(child, knownWords);
+        child = next;
+      }
+      break;
+    case 3: // Text node
+      handleText(node, knownWords);
+      break;
   }
+}
 
-  function walk(node, knownWords, regex) {
-    let child, next;
+function handleText(textNode, knownWords) {
+  let content = textNode.nodeValue;
+  let span = document.createElement('span');
+  let lastIndex = 0;
+  let replaced = false;
+  let replacedCount = 0;
 
-    switch (node.nodeType) {
-      case 1: // Element
-      case 9: // Document
-      case 11: // Document fragment
-        child = node.firstChild;
-        while (child) {
-          next = child.nextSibling;
-          walk(child, knownWords, regex);
-          child = next;
-        }
-        break;
-      case 3: // Text node
-        handleText(node, knownWords, regex);
-        break;
+  const words = Object.keys(knownWords).join('|');
+  const regex = new RegExp(`\\b(${words})\\b`, 'gi');
+  const originalContent = content;
+
+  content.replace(regex, (match, p1, offset) => {
+    p1 = p1.toLowerCase();
+    span.appendChild(document.createTextNode(content.slice(lastIndex, offset)));
+
+    const translation = knownWords[p1].translation;
+    const furigana = knownWords[p1].furigana;
+    const tooltip = furigana ? `${furigana} :)` : `:)`;
+
+    const anchor = document.createElement('a');
+    anchor.href = `https://jisho.org/search/${translation}`;
+    anchor.target = '_blank';
+    anchor.className = 'jaymagic-tooltip';
+    anchor.dataset.originalWord = p1;
+    anchor.title = tooltip;
+    anchor.textContent = translation;
+
+    span.appendChild(anchor);
+    lastIndex = offset + match.length;
+    replaced = true;
+    replacedCount++;
+  });
+
+  span.appendChild(document.createTextNode(content.slice(lastIndex)));
+  
+  if (replaced) {
+    // Check if more than 50% of the sentence has been translated
+    const totalWords = originalContent.split(/\s+/).length;
+    const percentageReplaced = (replacedCount / totalWords) * 100;
+    if (totalWords >= 3 && percentageReplaced > 50) {
+      const sparkle = document.createElement('img');
+      sparkle.src = chrome.runtime.getURL('sparkle.png');
+      sparkle.style.width = '16px';
+      sparkle.style.height = '16px';
+      sparkle.style.cursor = 'pointer';
+      sparkle.addEventListener('click', () => {
+        alert(originalContent);
+      });
+      span.appendChild(sparkle);
     }
+
+    textNode.parentNode.replaceChild(span, textNode);
   }
+}
 
-  function handleText(textNode, knownWords, regex) {
-    let content = textNode.nodeValue;
+// Check if the current site is blacklisted
+function isBlacklisted(url, blacklistedSites) {
+  return blacklistedSites.some(site => url.includes(site));
+}
 
-    const span = document.createElement('span');
-    let lastIndex = 0;
-    let replaced = false;
-    let swapCount = 0;
-    const originalContent = content;
+// Initialize the known words and replace them on page load
+chrome.storage.local.get({ knownWords: {}, blacklistedSites: [] }, (result) => {
+  const currentUrl = window.location.href;
+  if (!isBlacklisted(currentUrl, result.blacklistedSites)) {
+    replaceKnownWords(result.knownWords);
+  } else {
+    console.log("JayMagic: Site is blacklisted, skipping translation.");
+  }
+});
 
-    // Use regex to match sentences
-    const sentences = content.match(/[^.!?]+[.!?]*\s*/g) || [content];
+// Listen for changes to the known words and update the replacements
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'local') {
+    chrome.storage.local.get({ blacklistedSites: [] }, (result) => {
+      const currentUrl = window.location.href;
+      if (!isBlacklisted(currentUrl, result.blacklistedSites)) {
+        if (changes.knownWords) {
+          replaceKnownWords(changes.knownWords.newValue);
+        }
+      } else {
+        console.log("JayMagic: Site is blacklisted, skipping translation.");
+      }
+    });
+  }
+});
 
-    sentences.forEach(sentence => {
-      let sentenceSpan = document.createElement('span');
-      let sentenceSwapCount = 0;
-      let lastSentenceIndex = 0;
+// Listen for messages from the background script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'updateTranslation') {
+    updateTranslationOnPage(request.word, request.translation, request.furigana);
+    sendResponse({ status: 'ok' });
+  }
+});
 
-      sentence.replace(regex, (match, p1, offset) => {
-        const key = p1.toLowerCase();
-        if (knownWords[key]) {
-          sentenceSpan.appendChild(document.createTextNode(sentence.slice(lastSentenceIndex, offset)));
+// Function to update the translation on the page
+function updateTranslationOnPage(word, translation, furigana) {
+  document.querySelectorAll('.jaymagic-tooltip').forEach(element => {
+    if (element.dataset.originalWord === word) {
+      element.textContent = translation;
+      element.title = furigana ? `${furigana} :)` : ':)';
+    }
+  });
+}
 
-          const translation = knownWords[key].translation;
-          const furigana = knownWords[key].furigana;
-          const tooltip = furigana ? `${furigana} :)` : `:)`;
-
-          const anchor = document.createElement('a');
-          anchor.href = `https://jisho.org/search/${translation}`;
-          anchor.target = '_blank';
-          anchor.className = 'jaymagic-tooltip';
-          anchor.title = tooltip;
-          anchor.textContent = translation;
-
-          sentenceSpan.appendChild(anchor);
-
-          lastSentenceIndex = offset + match.length;
-          replaced = true;
-          sentenceSwapCount++;
+// Add listener for context menu event
+document.addEventListener('contextmenu', (event) => {
+  const selection = window.getSelection().toString().toLowerCase();
+  if (selection) {
+    const anchor = event.target.closest('.jaymagic-tooltip');
+    if (anchor) {
+      chrome.runtime.sendMessage({
+        action: 'setOriginalWord',
+        originalWord: anchor.dataset.originalWord
+      }, (response) => {
+        if (response.status === 'ok') {
+          console.log(`Original word "${anchor.dataset.originalWord}" set for retry.`);
         }
       });
-
-      sentenceSpan.appendChild(document.createTextNode(sentence.slice(lastSentenceIndex)));
-
-      const totalWords = sentence.split(/\s+/).filter(word => word.length > 0).length;
-      if (totalWords >= 3 && sentenceSwapCount / totalWords > 0.5) {
-        const icon = document.createElement('img');
-        icon.src = chrome.runtime.getURL('sparkle.png');
-        icon.style.width = '20px'; // Increase the size of the icon
-        icon.style.height = '20px'; // Increase the size of the icon
-        icon.style.marginLeft = '4px';
-        icon.style.border = '2px solid white'; // Add a border
-        icon.style.borderRadius = '50%'; // Make the border circular
-        icon.style.backgroundColor = 'yellow'; // Add a background color
-        icon.style.boxShadow = '0 0 5px rgba(0, 0, 0, 0.5)'; // Add a drop shadow
-        icon.className = 'copilot-icon';
-        icon.addEventListener('click', () => {
-          alert(originalContent);
-        });
-        sentenceSpan.appendChild(icon);
-      }
-
-      span.appendChild(sentenceSpan);
-    });
-
-    if (replaced) {
-      textNode.parentNode.replaceChild(span, textNode);
     }
   }
-
-  function init() {
-    chrome.storage.local.get(['knownWords', 'blacklistedSites'], function(result) {
-      knownWords = result.knownWords || {};
-      blacklistedSites = result.blacklistedSites || [];
-
-      const url = new URL(window.location.href);
-      const fullEntry = `${url.hostname}${url.pathname}`;
-
-      if (!blacklistedSites.some(site => fullEntry.startsWith(site))) {
-        replaceKnownWords(knownWords);
-      }
-    });
-
-    chrome.storage.onChanged.addListener(function(changes, areaName) {
-      if (areaName === 'local') {
-        if (changes.knownWords) {
-          knownWords = changes.knownWords.newValue || {};
-          const url = new URL(window.location.href);
-          const fullEntry = `${url.hostname}${url.pathname}`;
-
-          if (!blacklistedSites.some(site => fullEntry.startsWith(site))) {
-            replaceKnownWords(knownWords);
-          }
-        }
-        if (changes.blacklistedSites) {
-          blacklistedSites = changes.blacklistedSites.newValue || [];
-          const url = new URL(window.location.href);
-          const fullEntry = `${url.hostname}${url.pathname}`;
-
-          if (blacklistedSites.some(site => fullEntry.startsWith(site))) {
-            window.location.reload();
-          }
-        }
-      }
-    });
-  }
-
-  window.addEventListener('load', init);
-})();
+});

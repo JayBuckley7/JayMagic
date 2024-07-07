@@ -12,6 +12,8 @@ const RETRY_MODEL = 'gpt-4';
 const RETRY_SYSTEM_PROMPT = "You are a word replacer. Always provide the most common form in either Kanji or Hiragana (or katakana). Only provide one word, do not provide both kana and kanji. Do not provide the furigana if you provide the kanji. If the word is something too simple, like 'a', 'to', or 'it', provide a particle.";
 const RETRY_USER_PROMPT = "Translate the following English word to Japanese, providing the most common form first, followed by a comma and the romaji, or a comma and '' if not applicable: ";
 
+let originalWordToRetry = ''; // Store the original word to retry
+
 chrome.runtime.onInstalled.addListener(() => {
   console.log("JayMagic: Extension installed, creating context menu...");
 
@@ -88,8 +90,8 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "addToDict" && info.selectionText) {
     addWordToDictionary(info.selectionText);
   }
-  if (info.menuItemId === "tryAgain" && info.selectionText) {
-    retryWithDifferentModel(info.selectionText, tab.id);
+  if (info.menuItemId === "tryAgain") {
+    retryWithDifferentModel(originalWordToRetry);
   }
 });
 
@@ -103,6 +105,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "translateWord") {
     translateWord(request.word, sendResponse);
     return true; // Keep the message channel open for sendResponse
+  }
+  if (request.action === 'setOriginalWord') {
+    originalWordToRetry = request.originalWord;
+    sendResponse({ status: 'ok' });
   }
 });
 
@@ -162,8 +168,15 @@ function translateWord(word, callback) {
       console.log('JayMagic: Response from OpenAI:', data);  // Log the entire response
       if (data.choices && data.choices.length > 0) {
         const content = data.choices[0].message.content.trim();
-        const [translation, furigana] = content.split(',');
-        callback(translation.trim(), furigana.trim());
+        const splitContent = content.split(',');
+        
+        if (splitContent.length === 2) {
+          const [translation, furigana] = splitContent;
+          callback(translation.trim(), furigana.trim());
+        } else {
+          console.error('JayMagic: Unexpected format received from OpenAI:', content);
+          callback(content.trim(), '');  // Fallback to use content as translation and no furigana
+        }
       } else {
         console.error('JayMagic: No translation received from OpenAI.');
       }
@@ -172,7 +185,7 @@ function translateWord(word, callback) {
   });
 }
 
-function retryWithDifferentModel(word, tabId) {
+function retryWithDifferentModel(word) {
   chrome.storage.local.get({ apiKey: DEFAULT_OPENAI_API_KEY, retryModel: RETRY_MODEL, retrySystemPrompt: RETRY_SYSTEM_PROMPT, retryUserPrompt: RETRY_USER_PROMPT }, (result) => {
     const apiKey = result.apiKey;
     if (apiKey === DEFAULT_OPENAI_API_KEY) {
@@ -212,7 +225,7 @@ function retryWithDifferentModel(word, tabId) {
       if (data.choices && data.choices.length > 0) {
         const content = data.choices[0].message.content.trim();
         const [translation, furigana] = content.split(',');
-        updateWordInTab(word, translation.trim(), furigana.trim(), tabId);
+        updateWordInDict(word, translation.trim(), furigana.trim());
       } else {
         console.error('JayMagic: No translation received from OpenAI.');
       }
@@ -221,17 +234,21 @@ function retryWithDifferentModel(word, tabId) {
   });
 }
 
-function updateWordInTab(originalWord, translation, furigana, tabId) {
-  const updateScript = `
-    document.querySelectorAll('.jaymagic-tooltip').forEach(element => {
-      if (element.textContent.trim() === "${originalWord}") {
-        element.textContent = "${translation}";
-        element.title = "${furigana ? furigana + ' :)' : ':)'}";
-      }
+function updateWordInDict(originalWord, translation, furigana) {
+  // Convert word to lowercase
+  const lowercaseWord = originalWord.toLowerCase();
+
+  chrome.storage.local.get({ knownWords: {} }, (result) => {
+    const knownWords = result.knownWords;
+    knownWords[lowercaseWord] = { translation, furigana };
+    chrome.storage.local.set({ knownWords }, () => {
+      console.log(`JayMagic: Word "${lowercaseWord}" updated in the dictionary with translation "${translation}" and furigana "${furigana}".`);
+      // Notify content script to update the page
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]) {
+          chrome.tabs.sendMessage(tabs[0].id, { action: 'updateTranslation', word: lowercaseWord, translation, furigana });
+        }
+      });
     });
-  `;
-  chrome.scripting.executeScript({
-    target: { tabId: tabId },
-    func: new Function(updateScript),
   });
 }

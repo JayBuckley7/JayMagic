@@ -91,7 +91,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     addWordToDictionary(info.selectionText);
   }
   if (info.menuItemId === "tryAgain") {
-    retryWithDifferentModel(originalWordToRetry);
+    retryWithDifferentModel(originalWordToRetry, tab.id);
   }
 });
 
@@ -109,6 +109,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'setOriginalWord') {
     originalWordToRetry = request.originalWord;
     sendResponse({ status: 'ok' });
+  }
+  if (request.action === 'translateSentence') {
+    translateSentence(request.sentence, request.knownWords, sendResponse);
+    return true; // Keep the message channel open for sendResponse
   }
 });
 
@@ -168,15 +172,8 @@ function translateWord(word, callback) {
       console.log('JayMagic: Response from OpenAI:', data);  // Log the entire response
       if (data.choices && data.choices.length > 0) {
         const content = data.choices[0].message.content.trim();
-        const splitContent = content.split(',');
-        
-        if (splitContent.length === 2) {
-          const [translation, furigana] = splitContent;
-          callback(translation.trim(), furigana.trim());
-        } else {
-          console.error('JayMagic: Unexpected format received from OpenAI:', content);
-          callback(content.trim(), '');  // Fallback to use content as translation and no furigana
-        }
+        const [translation, furigana] = content.split(',');
+        callback(translation.trim(), furigana ? furigana.trim() : '');
       } else {
         console.error('JayMagic: No translation received from OpenAI.');
       }
@@ -185,7 +182,7 @@ function translateWord(word, callback) {
   });
 }
 
-function retryWithDifferentModel(word) {
+function retryWithDifferentModel(word, tabId) {
   chrome.storage.local.get({ apiKey: DEFAULT_OPENAI_API_KEY, retryModel: RETRY_MODEL, retrySystemPrompt: RETRY_SYSTEM_PROMPT, retryUserPrompt: RETRY_USER_PROMPT }, (result) => {
     const apiKey = result.apiKey;
     if (apiKey === DEFAULT_OPENAI_API_KEY) {
@@ -225,7 +222,7 @@ function retryWithDifferentModel(word) {
       if (data.choices && data.choices.length > 0) {
         const content = data.choices[0].message.content.trim();
         const [translation, furigana] = content.split(',');
-        updateWordInDict(word, translation.trim(), furigana.trim());
+        updateWordInDict(word, translation.trim(), furigana ? furigana.trim() : '');
       } else {
         console.error('JayMagic: No translation received from OpenAI.');
       }
@@ -235,20 +232,79 @@ function retryWithDifferentModel(word) {
 }
 
 function updateWordInDict(originalWord, translation, furigana) {
-  // Convert word to lowercase
-  const lowercaseWord = originalWord.toLowerCase();
+  const updatedWord = originalWord.toLowerCase();
 
+  // Get the dict as a JSON object
   chrome.storage.local.get({ knownWords: {} }, (result) => {
     const knownWords = result.knownWords;
-    knownWords[lowercaseWord] = { translation, furigana };
+    knownWords[originalWord] = { translation, furigana };
+
+    // Update the dict
     chrome.storage.local.set({ knownWords }, () => {
-      console.log(`JayMagic: Word "${lowercaseWord}" updated in the dictionary with translation "${translation}" and furigana "${furigana}".`);
-      // Notify content script to update the page
+      console.log(`JayMagic: Word "${originalWord}" updated in the dictionary with translation "${translation}" and furigana "${furigana}".`);
+
+      // Notify the content script to update the word on the page
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, { action: 'updateTranslation', word: lowercaseWord, translation, furigana });
-        }
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: 'updateTranslation',
+          word: originalWord,
+          translation: translation,
+          furigana: furigana
+        });
       });
+    });
+  });
+}
+
+function translateSentence(sentence, knownWords, callback) {
+  chrome.storage.local.get({ apiKey: DEFAULT_OPENAI_API_KEY, model: DEFAULT_MODEL, systemPrompt: DEFAULT_SYSTEM_PROMPT }, (result) => {
+    const apiKey = result.apiKey;
+    if (apiKey === DEFAULT_OPENAI_API_KEY) {
+      console.error("JayMagic: Using default API key. Please update the API key in options.");
+      return;
+    }
+    
+    // Create a list of known words in the format "word: translation"
+    const knownWordsList = Object.entries(knownWords).map(([word, { translation }]) => `${word}: ${translation}`).join(', ');
+
+    const messageRequest = {
+      model: result.model,
+      messages: [
+        {
+          role: "system",
+          content: result.systemPrompt
+        },
+        {
+          role: "user",
+          content: `Translate the following English sentence to Japanese. Please try to use the following words where possible: ${knownWordsList}\nSentence: ${sentence}`
+        }
+      ],
+      max_tokens: 150,
+      temperature: 0.3
+    };
+
+    fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(messageRequest)
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('JayMagic: Response from OpenAI:', data);  // Log the entire response
+      if (data.choices && data.choices.length > 0) {
+        const content = data.choices[0].message.content.trim();
+        callback({ status: 'ok', translatedSentence: content });
+      } else {
+        console.error('JayMagic: No translation received from OpenAI.');
+        callback({ status: 'error' });
+      }
+    })
+    .catch(error => {
+      console.error('JayMagic: Error translating sentence:', error);
+      callback({ status: 'error' });
     });
   });
 }

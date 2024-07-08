@@ -42,8 +42,14 @@ function handleText(textNode, knownWords) {
     const furigana = knownWords[p1].furigana;
     const tooltip = furigana ? `${furigana} :)` : `:)`;
 
-    const anchor = document.createElement('a');
-    anchor.href = `https://jisho.org/search/${translation}`;
+    let anchor = document.createElement('a');
+    if (textNode.parentNode.nodeName.toLowerCase() === 'a' && textNode.parentNode.href) {
+      anchor = textNode.parentNode.cloneNode();
+      anchor.href = textNode.parentNode.href;
+    } else {
+      anchor.href = `https://jisho.org/search/${translation}`;
+    }
+
     anchor.target = '_blank';
     anchor.className = 'jaymagic-tooltip';
     anchor.dataset.originalWord = p1;
@@ -57,7 +63,7 @@ function handleText(textNode, knownWords) {
   });
 
   span.appendChild(document.createTextNode(content.slice(lastIndex)));
-  
+
   if (replaced) {
     // Check if more than 50% of the sentence has been translated
     const totalWords = originalContent.split(/\s+/).length;
@@ -69,7 +75,17 @@ function handleText(textNode, knownWords) {
       sparkle.style.height = '16px';
       sparkle.style.cursor = 'pointer';
       sparkle.addEventListener('click', () => {
-        alert(originalContent);
+        chrome.runtime.sendMessage({
+          action: 'translateSentence',
+          sentence: originalContent,
+          knownWords: knownWords // Pass the known words to the background script
+        }, (response) => {
+          if (response.status === 'ok' && response.translatedSentence) {
+            const newSpan = document.createElement('span');
+            newSpan.innerHTML = response.translatedSentence;
+            span.replaceWith(newSpan);
+          }
+        });
       });
       span.appendChild(sparkle);
     }

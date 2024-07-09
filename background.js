@@ -137,27 +137,18 @@ function translateWord(word, callback) {
   chrome.storage.local.get({ apiKey: DEFAULT_OPENAI_API_KEY, model: DEFAULT_MODEL, systemPrompt: DEFAULT_SYSTEM_PROMPT, userPrompt: DEFAULT_USER_PROMPT }, (result) => {
     const apiKey = result.apiKey;
     if (apiKey === DEFAULT_OPENAI_API_KEY) {
-      console.error("JayMagic: Using default API key. Please update the API key in options.");
+      alert("Please update the API key in options.");
       return;
     }
     const messageRequest = {
       model: result.model,
       messages: [
-        {
-          role: "system",
-          content: result.systemPrompt
-        },
-        {
-          role: "user",
-          content: `${result.userPrompt} ${word}.`
-        }
+        { role: "system", content: result.systemPrompt },
+        { role: "user", content: `${result.userPrompt} ${word}.` }
       ],
       max_tokens: 60,
       temperature: 0.3
     };
-
-    // Log the message request to the console for verification
-    console.log('JayMagic: Message request to OpenAI:', messageRequest);
 
     fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -169,18 +160,20 @@ function translateWord(word, callback) {
     })
     .then(response => response.json())
     .then(data => {
-      console.log('JayMagic: Response from OpenAI:', data);  // Log the entire response
       if (data.choices && data.choices.length > 0) {
         const content = data.choices[0].message.content.trim();
         const [translation, furigana] = content.split(',');
         callback(translation.trim(), furigana ? furigana.trim() : '');
       } else {
-        console.error('JayMagic: No translation received from OpenAI.');
+        alert('No translation received from OpenAI.');
       }
     })
-    .catch(error => console.error('JayMagic: Error translating word:', error));
+    .catch(error => {
+      alert('Error translating word. Please try again later.');
+    });
   });
 }
+
 
 function retryWithDifferentModel(word, tabId) {
   chrome.storage.local.get({ apiKey: DEFAULT_OPENAI_API_KEY, retryModel: RETRY_MODEL, retrySystemPrompt: RETRY_SYSTEM_PROMPT, retryUserPrompt: RETRY_USER_PROMPT }, (result) => {

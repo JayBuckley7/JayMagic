@@ -35,5 +35,13 @@
       "resources": ["sparkle.png"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "commands": {
+    "toggle-translation": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y"
+      },
+      "description": "Toggle translation mode"
+    }
+  }
 }

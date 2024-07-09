@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!blacklistedSites.includes(fullEntry)) {
           blacklistedSites.push(fullEntry);
           chrome.storage.local.set({ blacklistedSites }, () => {
-            console.log(`JayMagic: Path "${fullEntry}" added to the blacklist.`);
             alert(`Path "${fullEntry}" has been disabled.`);
           });
         } else {
@@ -40,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (index > -1) {
           blacklistedSites.splice(index, 1);
           chrome.storage.local.set({ blacklistedSites }, () => {
-            console.log(`JayMagic: Path "${fullEntry}" removed from the blacklist.`);
             alert(`Path "${fullEntry}" has been enabled.`);
           });
         } else {

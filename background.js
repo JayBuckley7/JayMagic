@@ -261,15 +261,15 @@ function translateSentence(sentence, knownWords, callback) {
     const knownWordsList = Object.entries(knownWords).map(([word, { translation }]) => `${word}: ${translation}`).join(', ');
 
     const messageRequest = {
-      model: result.model,
+      model: RETRY_MODEL,
       messages: [
         {
           role: "system",
-          content: result.systemPrompt
+          content: `words in Japanese should remain in japanse, words in enlgish must be used and remain in english.`
         },
         {
           role: "user",
-          content: `Translate the following English sentence to Japanese. Please try to use the following words where possible: ${knownWordsList}\nSentence: ${sentence}`
+          content: `Restructure the Japanese. Please try to use the following words where possible and leave the english words in english: ${knownWordsList}\nSentence: ${sentence}`
         }
       ],
       max_tokens: 150,

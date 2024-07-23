@@ -1,3 +1,5 @@
+// background.js
+
 const DEFAULT_OPENAI_API_KEY = 'YOUR_DEFAULT_API_KEY'; // Replace with a default placeholder
 const DEFAULT_BLACKLISTED_SITES = [
   'jisho.org/search/',
@@ -50,26 +52,53 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 
   chrome.contextMenus.create({
+    id: "jaymagic",
+    title: "JayMagic",
+    contexts: ["selection"]
+  }, () => {
+    if (chrome.runtime.lastError) {
+      console.error("JayMagic: Error creating context menu:", chrome.runtime.lastError);
+    } else {
+      console.log("JayMagic: Parent context menu created successfully.");
+    }
+  });
+
+  chrome.contextMenus.create({
     id: "addToDict",
+    parentId: "jaymagic",
     title: "Add to dict",
     contexts: ["selection"]
   }, () => {
     if (chrome.runtime.lastError) {
       console.error("JayMagic: Error creating context menu:", chrome.runtime.lastError);
     } else {
-      console.log("JayMagic: Context menu created successfully.");
+      console.log("JayMagic: 'Add to dict' context menu created successfully.");
     }
   });
 
   chrome.contextMenus.create({
     id: "tryAgain",
+    parentId: "jaymagic",
     title: "Try again",
     contexts: ["selection"]
   }, () => {
     if (chrome.runtime.lastError) {
       console.error("JayMagic: Error creating context menu:", chrome.runtime.lastError);
     } else {
-      console.log("JayMagic: Context menu created successfully.");
+      console.log("JayMagic: 'Try again' context menu created successfully.");
+    }
+  });
+
+  chrome.contextMenus.create({
+    id: "searchInJisho",
+    parentId: "jaymagic",
+    title: "Search in Jisho",
+    contexts: ["selection"]
+  }, () => {
+    if (chrome.runtime.lastError) {
+      console.error("JayMagic: Error creating context menu:", chrome.runtime.lastError);
+    } else {
+      console.log("JayMagic: 'Search in Jisho' context menu created successfully.");
     }
   });
 
@@ -92,6 +121,11 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
   if (info.menuItemId === "tryAgain") {
     retryWithDifferentModel(originalWordToRetry, tab.id);
+  }
+  if (info.menuItemId === "searchInJisho" && info.selectionText) {
+    const query = info.selectionText.trim();
+    const url = `https://jisho.org/search/${encodeURIComponent(query)}`;
+    chrome.tabs.create({ url });
   }
 });
 
@@ -173,7 +207,6 @@ function translateWord(word, callback) {
     });
   });
 }
-
 
 function retryWithDifferentModel(word, tabId) {
   chrome.storage.local.get({ apiKey: DEFAULT_OPENAI_API_KEY, retryModel: RETRY_MODEL, retrySystemPrompt: RETRY_SYSTEM_PROMPT, retryUserPrompt: RETRY_USER_PROMPT }, (result) => {

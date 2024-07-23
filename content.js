@@ -31,9 +31,12 @@ function handleText(textNode, knownWords) {
   let replacedCount = 0;
 
   const words = Object.keys(knownWords).join('|');
+  const translations = Object.values(knownWords).map(word => word.translation).join('|');
   const regex = new RegExp(`\\b(${words})\\b`, 'gi');
+  const regexTranslations = new RegExp(`(${translations})`, 'g');
   const originalContent = content;
 
+  // Replace English to Japanese
   content.replace(regex, (match, p1, offset) => {
     p1 = p1.toLowerCase();
     span.appendChild(document.createTextNode(content.slice(lastIndex, offset)));
@@ -55,6 +58,35 @@ function handleText(textNode, knownWords) {
     anchor.dataset.originalWord = p1;
     anchor.title = tooltip;
     anchor.textContent = translation;
+
+    span.appendChild(anchor);
+    lastIndex = offset + match.length;
+    replaced = true;
+    replacedCount++;
+  });
+
+  // Replace Japanese to Japanese
+  content.replace(regexTranslations, (match, p1, offset) => {
+    span.appendChild(document.createTextNode(content.slice(lastIndex, offset)));
+
+    // Find the original English word that maps to this Japanese translation
+    const originalWord = Object.keys(knownWords).find(key => knownWords[key].translation === p1);
+    const furigana = knownWords[originalWord].furigana;
+    const tooltip = furigana ? `${furigana} :)` : `:)`;
+
+    let anchor = document.createElement('a');
+    if (textNode.parentNode.nodeName.toLowerCase() === 'a' && textNode.parentNode.href) {
+      anchor = textNode.parentNode.cloneNode();
+      anchor.href = textNode.parentNode.href;
+    } else {
+      anchor.href = `https://jisho.org/search/${p1}`;
+    }
+
+    anchor.target = '_blank';
+    anchor.className = 'jaymagic-tooltip';
+    anchor.dataset.originalWord = originalWord;
+    anchor.title = tooltip;
+    anchor.textContent = p1;
 
     span.appendChild(anchor);
     lastIndex = offset + match.length;
